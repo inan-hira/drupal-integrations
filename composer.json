@@ -1,0 +1,31 @@
+{
+    "name": "inan-hira/drupal-integrations",
+    "description": "Add this project to any Drupal distribution based on drupal/core-composer-scaffold to enable it for use",
+    "type": "project",
+    "version": "1.0.0",
+    "require": {
+        "dealerdirect/phpcodesniffer-composer-installer": "^1.2",
+        "drupal/coder": "^9.0",
+        "mglaman/phpstan-drupal": "^2.1",
+        "phpstan/extension-installer": "^1.4",
+        "phpstan/phpstan": "^2.2",
+        "phpstan/phpstan-deprecation-rules": "^2.0"
+    },
+    "extra": {
+        "drupal-scaffold": {
+            "file-mapping": {
+                "[project-root]/phpstan.neon": "assets/phpstan.neon",
+                "[project-root]/.git/hooks/pre-commit": "assets/git-hooks/pre-commit",
+                "[project-root]/phpcs.xml": "assets/phpcs.xml",
+                "[project-root]/scripts/install-aikido-local-scanner": "assets/scripts/install-aikido-local-scanner"
+            },
+            "gitignore": true
+        }
+    },
+    "license": "agpl-3.0",
+    "autoload": {
+        "psr-4": {
+            "InanHira\\DrupalIntegrations\\": "src/"
+        }
+    }
+}

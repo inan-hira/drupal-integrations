@@ -1,0 +1,26 @@
+#!/bin/bash
+
+set -euo pipefail
+
+# Variables.
+AIKIDO_BINARY="${HOME}/.local/bin/aikido-local-scanner"
+AIKIDO_INSTALL_SCRIPT_URL="https://raw.githubusercontent.com/AikidoSec/pre-commit/6cc79e039ee78b206520f143d618a44665c904b3/installation-samples/install-global/install-aikido-hook.sh"
+
+echo "Checking if Aikido Local Scanner is installed..."
+if [[ -x "${AIKIDO_BINARY}" ]]; then
+  echo "Aikido Local Scanner is installed."
+  exit 0
+fi
+
+echo "Attempting to install Aikido Local Scanner..."
+if ! curl -fsSL "${AIKIDO_INSTALL_SCRIPT_URL}" | bash -s -- --download-only; then
+  echo "Error: Failed to download or run the Aikido Local Scanner installer." >&2
+  exit 1
+fi
+
+if [[ ! -x "${AIKIDO_BINARY}" ]]; then
+  echo "Error: Aikido Local Scanner installation completed but ${AIKIDO_BINARY} was not found." >&2
+  exit 1
+fi
+
+echo "Aikido Local Scanner installed successfully."

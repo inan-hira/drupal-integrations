@@ -1,0 +1,74 @@
+#!/bin/bash
+
+exit_with_error() {
+  printf "\n"
+  echo "Error: $1" >&2
+  exit 1
+}
+
+# Variables.
+AIKIDO_BINARY="${HOME}/.local/bin/aikido-local-scanner"
+PHP_CS_BINARY="./vendor/bin/phpcs"
+
+########################
+######## Checks ########
+########################
+
+######## PHP_CS ########
+
+# Check for the staged files, show names of added, copied and modified files
+INDEX=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.(php|module|inc|install|test|profile|theme|css|info|txt|md|yml|twig)$')
+
+if [[ -z "$INDEX" ]]; then
+  printf "\nWARNING"
+  printf "\nNo staged files could be checked using PHP_CS\n"
+fi
+
+# Check if phpcs is available in project
+HAS_PHPCS=true
+if [[ ! -x "$PHP_CS_BINARY" ]]; then
+  HAS_PHPCS=false
+  printf "\nPHP_CS is not installed. Please run composer install at your project root.\n"
+fi
+
+HAS_ERRORS=false
+if $HAS_PHPCS && [[ -n "$INDEX" ]]; then
+  # Check all the staged files
+  while IFS= read -r FILE; do
+    if "$PHP_CS_BINARY" "$FILE"; then
+      printf "PHP_CS checks passed: %s\n" "$FILE"
+    else
+      printf "PHP_CS checks failed for %s\n" "$FILE"
+      HAS_ERRORS=true
+    fi
+  done <<< "$INDEX"
+
+  printf "\nPHP_CS checks complete\n"
+fi
+
+if $HAS_ERRORS; then
+  exit_with_error "Cannot commit. Please fix the PHP_CS errors and try again"
+elif $HAS_PHPCS; then
+  printf "PHP_CS checks passed\n"
+fi
+
+######## Aikido ########
+
+AIKIDO_EXIT=0
+
+# Check if the Aikido binary is installed.
+if [[ -x "${AIKIDO_BINARY}" ]]; then
+  echo "Aikido Local Scanner is installed."
+  REPO_ROOT="$(git rev-parse --show-toplevel)"
+  "${AIKIDO_BINARY}" pre-commit-scan "$REPO_ROOT"
+  AIKIDO_EXIT=$?
+else
+  echo "Aikido Local Scanner is not installed. We're not checking for secrets in the staged files."
+fi
+
+if [[ $AIKIDO_EXIT -ne 0 ]]; then
+  exit_with_error "Aikido Local Scanner detected an issue. Please review and fix before committing."
+fi
+
+printf "\nAll applicable pre-commit checks passed\n"
+exit 0
